@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fallback-1",
+    "title": "Frontend Developer Intern (React & TypeScript)",
+    "company_name": "Nusantara Cloud Lab",
+    "category": "Software Development",
+    "job_type": "internship",
+    "candidate_required_location": "Remote",
+    "salary": "Rp 2.500.000 - Rp 3.500.000 / bulan",
+    "publication_date": "2026-11-10T09:00:00",
+    "url": "https://example.com/jobs/frontend-intern",
+    "tags": ["React", "TypeScript", "Tailwind CSS", "Git"]
+  },
+  {
+    "id": "fallback-2",
+    "title": "Junior Security & Network Operations Intern",
+    "company_name": "Garuda Cyber Defense",
+    "category": "Software Development",
+    "job_type": "internship",
+    "candidate_required_location": "Hybrid - Surabaya",
+    "salary": "Rp 3.000.000 / bulan",
+    "publication_date": "2026-11-12T13:30:00",
+    "url": "https://example.com/jobs/secops-intern",
+    "tags": ["Linux", "Networking", "Wireshark", "Python"]
+  },
+  {
+    "id": "fallback-3",
+    "title": "Fullstack Web Intern (Node.js & PostgreSQL)",
+    "company_name": "Merdeka Digital Studio",
+    "category": "Software Development",
+    "job_type": "internship",
+    "candidate_required_location": "Remote",
+    "salary": "Rp 2.800.000 - Rp 4.000.000 / bulan",
+    "publication_date": "2026-11-15T08:15:00",
+    "url": "https://example.com/jobs/fullstack-intern",
+    "tags": ["TypeScript", "Node.js", "Express", "PostgreSQL"]
+  }
+]
