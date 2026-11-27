@@ -1,12 +1,27 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
+
+import "./JobExplorer.css";
+
 import { useDebounce } from "../hooks/useDebounce";
 import { fetchSoftwareDevJobs } from "../services/jobService";
+
 import type {
   Application,
   JobListing,
   MatchLevel,
   MatchResult,
 } from "../types/magang";
+
+/* =========================================
+   DEFAULT SKILLS
+========================================= */
 
 export const DEFAULT_KAPTEN_SKILLS: string[] = [
   "React",
@@ -25,12 +40,23 @@ export interface JobExplorerProps {
   kaptenSkills: string[];
   onChangeKaptenSkills: (nextSkills: string[]) => void;
   applications: Application[];
-  onSaveJobAsApplication: (job: JobListing, match: MatchResult) => void;
+  onSaveJobAsApplication: (
+    job: JobListing,
+    match: MatchResult,
+  ) => void;
 }
+
+/* =========================================
+   HELPER FUNCTIONS
+========================================= */
 
 function normalizeSkill(value: string): string {
   return value.trim().toLowerCase();
 }
+
+/* =========================================
+   SKILL MATCH ENGINE
+========================================= */
 
 export function calculateJobMatch(
   job: JobListing,
@@ -39,8 +65,8 @@ export function calculateJobMatch(
   const cleanedSkills = Array.from(
     new Set(
       skills
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0),
+        .map((skill) => skill.trim())
+        .filter((skill) => skill.length > 0),
     ),
   );
 
@@ -55,6 +81,7 @@ export function calculateJobMatch(
 
   const haystack = [
     job.title,
+    job.company_name,
     job.category,
     job.job_type ?? "",
     job.candidate_required_location ?? "",
@@ -68,16 +95,20 @@ export function calculateJobMatch(
 
   for (const skill of cleanedSkills) {
     const token = normalizeSkill(skill);
-    if (token.length > 0 && haystack.includes(token)) {
+
+    if (token && haystack.includes(token)) {
       matchedSkills.push(skill);
     } else {
       missingSkills.push(skill);
     }
   }
 
-  const score = Math.round((matchedSkills.length / cleanedSkills.length) * 100);
+  const score = Math.round(
+    (matchedSkills.length / cleanedSkills.length) * 100,
+  );
 
   let level: MatchLevel = "Rendah";
+
   if (score >= 70) {
     level = "Tinggi";
   } else if (score >= 40) {
@@ -92,42 +123,44 @@ export function calculateJobMatch(
   };
 }
 
-function isJobAlreadySaved(job: JobListing, applications: Application[]): boolean {
+/* =========================================
+   DUPLICATE CHECK
+========================================= */
+
+function isJobAlreadySaved(
+  job: JobListing,
+  applications: Application[],
+): boolean {
   const targetCompany = normalizeSkill(job.company_name);
   const targetRole = normalizeSkill(job.title);
 
   return applications.some(
-    (app) =>
-      normalizeSkill(app.company) === targetCompany &&
-      normalizeSkill(app.role) === targetRole,
+    (application) =>
+      normalizeSkill(application.company) === targetCompany &&
+      normalizeSkill(application.role) === targetRole,
   );
 }
 
-function getBadgeStyle(level: MatchLevel): {
-  bg: string;
-  color: string;
-  border: string;
-} {
-  if (level === "Tinggi") {
-    return {
-      bg: "#dcfce7",
-      color: "#166534",
-      border: "#86efac",
-    };
+/* =========================================
+   MATCH BADGE
+========================================= */
+
+function getMatchClass(level: MatchLevel): string {
+  switch (level) {
+    case "Tinggi":
+      return "match-high";
+
+    case "Sedang":
+      return "match-medium";
+
+    default:
+      return "match-low";
   }
-  if (level === "Sedang") {
-    return {
-      bg: "#fef9c3",
-      color: "#854d0e",
-      border: "#fde047",
-    };
-  }
-  return {
-    bg: "#fee2e2",
-    color: "#991b1b",
-    border: "#fca5a5",
-  };
 }
+
+/* =========================================
+   MAIN COMPONENT
+========================================= */
 
 export function JobExplorer({
   kaptenSkills,
@@ -135,22 +168,35 @@ export function JobExplorer({
   applications,
   onSaveJobAsApplication,
 }: JobExplorerProps) {
-  const [jobs, setJobs] = useState<JobListing[]>([]);
-  const [dataSource, setDataSource] = useState<"remotive" | "fallback" | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retryNonce, setRetryNonce] = useState<number>(0);
+  /* JOB DATA */
 
-  const [newSkillInput, setNewSkillInput] = useState<string>("");
+  const [jobs, setJobs] = useState<JobListing[]>([]);
+
+  const [dataSource, setDataSource] = useState<
+    "remotive" | "fallback" | null
+  >(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
+
+  /* SKILL PROFILE */
+
+  const [newSkillInput, setNewSkillInput] = useState("");
   const [skillError, setSkillError] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  /* SEARCH AND FILTER */
+
+  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce<string>(searchQuery, 400);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+
   const [sortMode, setSortMode] = useState<SortMode>("match-desc");
+
+  /* =========================================
+     FETCH JOB DATA
+  ========================================= */
 
   useEffect(() => {
     const controller = new AbortController();
@@ -162,20 +208,27 @@ export function JobExplorer({
     fetchSoftwareDevJobs(controller.signal)
       .then((result) => {
         if (!active) return;
+
         setJobs(result.jobs);
         setDataSource(result.source);
         setIsLoading(false);
       })
-      .catch((err: unknown) => {
+      .catch((error: unknown) => {
         if (!active) return;
-        if (err instanceof DOMException && err.name === "AbortError") {
+
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
           return;
         }
-        const msg =
-          err instanceof Error
-            ? err.message
-            : "Terjadi kesalahan saat memuat data lowongan.";
-        setErrorMessage(msg);
+
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan saat memuat lowongan.";
+
+        setErrorMessage(message);
         setIsLoading(false);
       });
 
@@ -185,13 +238,22 @@ export function JobExplorer({
     };
   }, [retryNonce]);
 
+  /* =========================================
+     RETRY FETCH
+  ========================================= */
+
   const handleRetry = useCallback(() => {
-    setRetryNonce((prev) => prev + 1);
+    setRetryNonce((previous) => previous + 1);
   }, []);
 
+  /* =========================================
+     ADD SKILL
+  ========================================= */
+
   const handleAddSkill = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
       const trimmed = newSkillInput.trim();
 
       if (!trimmed) {
@@ -200,19 +262,25 @@ export function JobExplorer({
       }
 
       const exists = kaptenSkills.some(
-        (item) => normalizeSkill(item) === normalizeSkill(trimmed),
+        (skill) => normalizeSkill(skill) === normalizeSkill(trimmed),
       );
+
       if (exists) {
-        setSkillError(`Skill "${trimmed}" sudah ada di profil.`);
+        setSkillError(`Skill "${trimmed}" sudah terdaftar.`);
         return;
       }
 
       onChangeKaptenSkills([...kaptenSkills, trimmed]);
+
       setNewSkillInput("");
       setSkillError(null);
     },
     [kaptenSkills, newSkillInput, onChangeKaptenSkills],
   );
+
+  /* =========================================
+     REMOVE SKILL
+  ========================================= */
 
   const handleRemoveSkill = useCallback(
     (skillToRemove: string) => {
@@ -223,22 +291,37 @@ export function JobExplorer({
     [kaptenSkills, onChangeKaptenSkills],
   );
 
+  /* =========================================
+     CATEGORY OPTIONS
+  ========================================= */
+
   const categories = useMemo(() => {
     const unique = new Set<string>();
+
     for (const job of jobs) {
-      if (job.category.trim().length > 0) {
+      if (job.category.trim()) {
         unique.add(job.category.trim());
       }
     }
-    return ["ALL", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+
+    return [
+      "ALL",
+      ...Array.from(unique).sort((a, b) => a.localeCompare(b)),
+    ];
   }, [jobs]);
+
+  /* =========================================
+     FILTER AND RANK JOBS
+  ========================================= */
 
   const rankedJobs = useMemo(() => {
     const normalizedQuery = debouncedSearch.trim().toLowerCase();
 
     const filtered = jobs.filter((job) => {
       const matchesCategory =
-        selectedCategory === "ALL" || job.category === selectedCategory;
+        selectedCategory === "ALL" ||
+        job.category === selectedCategory;
+
       if (!matchesCategory) return false;
 
       if (!normalizedQuery) return true;
@@ -247,6 +330,7 @@ export function JobExplorer({
         job.title,
         job.company_name,
         job.category,
+        job.job_type ?? "",
         job.candidate_required_location ?? "",
         ...job.tags,
       ]
@@ -264,17 +348,19 @@ export function JobExplorer({
 
     return withMatch.sort((a, b) => {
       if (sortMode === "match-desc") {
-        if (b.match.score !== a.match.score) {
-          return b.match.score - a.match.score;
-        }
-        return a.job.title.localeCompare(b.job.title);
+        return (
+          b.match.score - a.match.score ||
+          a.job.title.localeCompare(b.job.title)
+        );
       }
+
       if (sortMode === "match-asc") {
-        if (a.match.score !== b.match.score) {
-          return a.match.score - b.match.score;
-        }
-        return a.job.title.localeCompare(b.job.title);
+        return (
+          a.match.score - b.match.score ||
+          a.job.title.localeCompare(b.job.title)
+        );
       }
+
       return a.job.title.localeCompare(b.job.title);
     });
   }, [
@@ -286,158 +372,458 @@ export function JobExplorer({
     applications,
   ]);
 
+  /* =========================================
+     RENDER
+  ========================================= */
+
   return (
-    <section aria-label="Fitur 1 - Profil Skill dan Eksplorasi Lowongan">
-      <h2>Profil Skill Kapten</h2>
-      <form onSubmit={handleAddSkill}>
-        <label htmlFor="kapten-skill-input">Tambah Skill:</label>
-        <input
-          id="kapten-skill-input"
-          type="text"
-          value={newSkillInput}
-          onChange={(e) => {
-            setNewSkillInput(e.target.value);
-            if (skillError) setSkillError(null);
-          }}
-          placeholder="Contoh: TypeScript, Docker, Wireshark"
-        />
-        <button type="submit">Tambah Skill</button>
-      </form>
-      {skillError && <p role="alert">{skillError}</p>}
+    <section
+      className="job-explorer"
+      aria-label="Profil Skill dan Eksplorasi Lowongan"
+    >
+      {/* PAGE HEADER */}
 
-      <div>
-        {kaptenSkills.length === 0 ? (
-          <p>Belum ada skill terdaftar. Tambahkan skill agar Match Score akurat.</p>
-        ) : (
-          kaptenSkills.map((skill) => (
-            <span key={skill}>
-              {skill}{" "}
-              <button
-                type="button"
-                onClick={() => handleRemoveSkill(skill)}
-                aria-label={`Hapus skill ${skill}`}
-              >
-                ×
-              </button>{" "}
-            </span>
-          ))
-        )}
-      </div>
+      <header className="explorer-heading">
+        <div className="explorer-heading-content">
+          <span className="explorer-eyebrow">
+            CAREER OPPORTUNITIES
+          </span>
 
-      <hr />
+          <h1>Eksplorasi Lowongan</h1>
 
-      <h2>Eksplorasi Lowongan</h2>
-      <div>
-        <label htmlFor="job-search-input">Cari Lowongan (debounce 400ms):</label>
-        <input
-          id="job-search-input"
-          type="search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Ketik judul, perusahaan, atau tag..."
-        />
-
-        <label htmlFor="job-category-select">Kategori:</label>
-        <select
-          id="job-category-select"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat === "ALL" ? "Semua Kategori" : cat}
-            </option>
-          ))}
-        </select>
-
-        <label htmlFor="job-sort-select">Urutkan:</label>
-        <select
-          id="job-sort-select"
-          value={sortMode}
-          onChange={(e) => setSortMode(e.target.value as SortMode)}
-        >
-          <option value="match-desc">Match Score Tertinggi</option>
-          <option value="match-asc">Match Score Terendah</option>
-          <option value="title-asc">Judul (A–Z)</option>
-        </select>
-
-        {dataSource && (
-          <small>
-            Sumber data: {dataSource === "remotive" ? "Remotive API" : "Fallback Lokal"}
-          </small>
-        )}
-      </div>
-
-      {isLoading && <p>Memuat daftar lowongan...</p>}
-
-      {!isLoading && errorMessage && (
-        <div role="alert">
-          <p>Gagal memuat lowongan: {errorMessage}</p>
-          <button type="button" onClick={handleRetry}>
-            Retry
-          </button>
+          <p>
+            Temukan peluang magang yang sesuai dengan kemampuan
+            dan potensi Kapten.
+          </p>
         </div>
-      )}
 
-      {!isLoading && !errorMessage && rankedJobs.length === 0 && (
-        <p>
-          Tidak ada lowongan yang cocok dengan pencarian atau filter saat ini.
-        </p>
-      )}
+        <div
+          className={`source-pill ${
+            dataSource === "remotive"
+              ? "source-live"
+              : dataSource === "fallback"
+                ? "source-fallback"
+                : "source-pending"
+          }`}
+        >
+          <span className="source-dot" />
 
-      {!isLoading && !errorMessage && rankedJobs.length > 0 && (
-        <div>
-          {rankedJobs.map(({ job, match, alreadySaved }) => {
-            const badgeStyle = getBadgeStyle(match.level);
+          {dataSource === "remotive"
+            ? "Remotive API"
+            : dataSource === "fallback"
+              ? "Fallback Lokal"
+              : "Memuat sumber data"}
+        </div>
+      </header>
 
-            return (
-              <article key={job.id}>
-                <h3>{job.title}</h3>
-                <p>
-                  <strong>{job.company_name}</strong> • {job.category}
-                  {job.candidate_required_location
-                    ? ` • ${job.candidate_required_location}`
-                    : ""}
-                </p>
+      {/* SKILL PROFILE */}
 
-                <span
-                  style={{
-                    backgroundColor: badgeStyle.bg,
-                    color: badgeStyle.color,
-                    border: `1px solid ${badgeStyle.border}`,
-                    padding: "2px 8px",
-                    borderRadius: "999px",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Match: {match.score}% ({match.level})
-                </span>
+      <section className="skills-panel">
+        <div className="section-heading">
+          <div>
+            <span className="explorer-eyebrow">
+              YOUR PROFILE
+            </span>
 
-                {match.matchedSkills.length > 0 && (
-                  <p>
-                    <small>Cocok: {match.matchedSkills.join(", ")}</small>
-                  </p>
-                )}
+            <h2>Profil Skill Kapten</h2>
 
-                {job.tags.length > 0 && (
-                  <p>
-                    <small>Tags: {job.tags.join(", ")}</small>
-                  </p>
-                )}
+            <p>
+              Tambahkan kemampuan yang kamu miliki untuk
+              menghitung tingkat kecocokan lowongan.
+            </p>
+          </div>
+
+          <span className="skill-count">
+            {kaptenSkills.length} Skills
+          </span>
+        </div>
+
+        <form className="skill-form" onSubmit={handleAddSkill}>
+          <input
+            id="kapten-skill-input"
+            type="text"
+            value={newSkillInput}
+            onChange={(event) => {
+              setNewSkillInput(event.target.value);
+
+              if (skillError) {
+                setSkillError(null);
+              }
+            }}
+            placeholder="Contoh: TypeScript, Docker, Python..."
+          />
+
+          <button type="submit" className="primary-button">
+            + Tambah Skill
+          </button>
+        </form>
+
+        {skillError && (
+          <p className="inline-error" role="alert">
+            {skillError}
+          </p>
+        )}
+
+        <div className="skill-chips">
+          {kaptenSkills.length === 0 ? (
+            <p className="empty-inline">
+              Belum ada skill. Silakan tambahkan skill terlebih dahulu.
+            </p>
+          ) : (
+            kaptenSkills.map((skill) => (
+              <span className="skill-chip" key={skill}>
+                {skill}
 
                 <button
                   type="button"
-                  disabled={alreadySaved}
-                  onClick={() => onSaveJobAsApplication(job, match)}
+                  onClick={() => handleRemoveSkill(skill)}
+                  aria-label={`Hapus skill ${skill}`}
+                  title={`Hapus ${skill}`}
                 >
-                  {alreadySaved ? "Sudah Tersimpan" : "Simpan ke Lamaran"}
+                  ×
                 </button>
-              </article>
-            );
-          })}
+              </span>
+            ))
+          )}
         </div>
-      )}
+      </section>
+
+      {/* JOB EXPLORER */}
+
+      <section className="explorer-results">
+        <div className="section-heading results-heading">
+          <div>
+            <span className="explorer-eyebrow">
+              JOB DISCOVERY
+            </span>
+
+            <h2>Daftar Lowongan</h2>
+
+            <p>
+              Bandingkan peluang kerja berdasarkan kecocokan skill.
+            </p>
+          </div>
+
+          <span className="results-count">
+            {rankedJobs.length} lowongan ditemukan
+          </span>
+        </div>
+
+        {/* SEARCH AND FILTER */}
+
+        <div className="filter-panel">
+          <div className="filter-field search-field">
+            <label htmlFor="job-search-input">
+              Cari Lowongan
+            </label>
+
+            <input
+              id="job-search-input"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Judul, perusahaan, atau skill..."
+            />
+
+            <small>Debounce pencarian: 400 ms</small>
+          </div>
+
+          <div className="filter-field">
+            <label htmlFor="job-category-select">
+              Kategori
+            </label>
+
+            <select
+              id="job-category-select"
+              value={selectedCategory}
+              onChange={(event) =>
+                setSelectedCategory(event.target.value)
+              }
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category === "ALL"
+                    ? "Semua Kategori"
+                    : category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-field">
+            <label htmlFor="job-sort-select">
+              Urutkan
+            </label>
+
+            <select
+              id="job-sort-select"
+              value={sortMode}
+              onChange={(event) =>
+                setSortMode(event.target.value as SortMode)
+              }
+            >
+              <option value="match-desc">
+                Match Score Tertinggi
+              </option>
+
+              <option value="match-asc">
+                Match Score Terendah
+              </option>
+
+              <option value="title-asc">
+                Judul A–Z
+              </option>
+            </select>
+          </div>
+        </div>
+
+        {/* LOADING */}
+
+        {isLoading && (
+          <div className="explorer-message">
+            <div className="loading-spinner" />
+
+            <h3>Memuat daftar lowongan</h3>
+
+            <p>
+              Sedang mengambil peluang kerja untuk Kapten...
+            </p>
+          </div>
+        )}
+
+        {/* ERROR */}
+
+        {!isLoading && errorMessage && (
+          <div className="explorer-message error-message" role="alert">
+            <div className="message-icon">!</div>
+
+            <h3>Gagal memuat lowongan</h3>
+
+            <p>{errorMessage}</p>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleRetry}
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
+        {/* EMPTY RESULT */}
+
+        {!isLoading &&
+          !errorMessage &&
+          rankedJobs.length === 0 && (
+            <div className="explorer-message">
+              <div className="message-icon">⌕</div>
+
+              <h3>Lowongan tidak ditemukan</h3>
+
+              <p>
+                Coba ubah kata pencarian atau pilih kategori lainnya.
+              </p>
+            </div>
+          )}
+
+        {/* JOB CARDS */}
+
+        {!isLoading &&
+          !errorMessage &&
+          rankedJobs.length > 0 && (
+            <div className="job-grid">
+              {rankedJobs.map(
+                ({ job, match, alreadySaved }) => (
+                  <article className="job-card" key={job.id}>
+                    {/* CARD HEADER */}
+
+                    <div className="job-card-top">
+                      <div className="company-icon">
+                        {job.company_name
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+
+                      <span
+                        className={`match-badge ${getMatchClass(
+                          match.level,
+                        )}`}
+                      >
+                        {match.score}% Match
+                      </span>
+                    </div>
+
+                    {/* JOB TITLE */}
+
+                    <h3 className="job-title">
+                      {job.title}
+                    </h3>
+
+                    <div className="job-company">
+                      <strong>{job.company_name}</strong>
+
+                      <span>•</span>
+
+                      <span>{job.category}</span>
+                    </div>
+
+                    {job.candidate_required_location && (
+                      <p className="job-location">
+                        <span>⌖</span>
+                        {job.candidate_required_location}
+                      </p>
+                    )}
+
+                    {job.job_type && (
+                      <span className="job-type">
+                        {job.job_type}
+                      </span>
+                    )}
+
+                    {job.salary && (
+                      <p className="job-salary">
+                        {job.salary}
+                      </p>
+                    )}
+
+                    {/* MATCH SCORE */}
+
+                    <div className="match-section">
+                      <div className="match-description">
+                        <span>Tingkat kecocokan skill</span>
+
+                        <strong>{match.level}</strong>
+                      </div>
+
+                      <div
+                        className="match-progress-track"
+                        role="progressbar"
+                        aria-label="Match Score"
+                        aria-valuenow={match.score}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className={`match-progress-fill ${getMatchClass(
+                            match.level,
+                          )}`}
+                          style={{
+                            width: `${match.score}%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {match.matchedSkills.length} dari{" "}
+                        {kaptenSkills.length} skill cocok
+                      </small>
+                    </div>
+
+                    {/* MATCHED SKILLS */}
+
+                    <div className="job-skills">
+                      <strong>Skill yang cocok</strong>
+
+                      {match.matchedSkills.length > 0 ? (
+                        <div className="job-tags">
+                          {match.matchedSkills.map((skill) => (
+                            <span
+                              className="job-tag matched-tag"
+                              key={skill}
+                            >
+                              ✓ {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="empty-inline">
+                          Belum ada skill yang cocok.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* MISSING SKILLS */}
+
+                    {match.missingSkills.length > 0 && (
+                      <div className="job-skills">
+                        <strong>
+                          Skill yang belum cocok
+                        </strong>
+
+                        <div className="job-tags">
+                          {match.missingSkills.map((skill) => (
+                            <span
+                              className="job-tag missing-tag"
+                              key={skill}
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* JOB TAGS */}
+
+                    {job.tags.length > 0 && (
+                      <div className="job-skills">
+                        <strong>Tags Lowongan</strong>
+
+                        <div className="job-tags">
+                          {job.tags.map((tag, index) => (
+                            <span
+                              className="job-tag"
+                              key={`${job.id}-${tag}-${index}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CARD FOOTER */}
+
+                    <div className="job-card-footer">
+                      {job.url ? (
+                        <a
+                          href={job.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="job-link"
+                        >
+                          Lihat Detail ↗
+                        </a>
+                      ) : (
+                        <span className="job-link-placeholder">
+                          Detail lowongan
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        className={
+                          alreadySaved
+                            ? "save-job-button saved"
+                            : "save-job-button"
+                        }
+                        disabled={alreadySaved}
+                        onClick={() =>
+                          onSaveJobAsApplication(job, match)
+                        }
+                      >
+                        {alreadySaved
+                          ? "✓ Tersimpan"
+                          : "+ Simpan Lamaran"}
+                      </button>
+                    </div>
+                  </article>
+                ),
+              )}
+            </div>
+          )}
+      </section>
     </section>
   );
 }

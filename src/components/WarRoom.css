@@ -1,0 +1,439 @@
+
+.war-room {
+  width: min(1200px, calc(100% - 40px));
+  margin: 40px auto;
+  color: #172033;
+  font-family: Arial, sans-serif;
+}
+
+.war-room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.war-room-eyebrow {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.war-room-header h1 {
+  margin: 8px 0;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.war-room-header p {
+  color: #64748b;
+}
+
+.war-room-total {
+  min-width: 130px;
+  padding: 18px;
+  background: #eff6ff;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.war-room-total span,
+.war-room-total strong {
+  display: block;
+}
+
+.war-room-total span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.war-room-total strong {
+  margin-top: 5px;
+  font-size: 30px;
+  color: #2563eb;
+}
+
+/* CONFLICT BANNER */
+
+.conflict-banner {
+  display: flex;
+  gap: 15px;
+  padding: 18px;
+  margin-bottom: 24px;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  border-radius: 12px;
+  color: #991b1b;
+}
+
+.conflict-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.conflict-banner strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.conflict-banner p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.conflict-banner ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+
+/* FILTERS */
+
+.war-room-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr auto;
+  align-items: end;
+  gap: 14px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.filter-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.filter-field input,
+.filter-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #172033;
+  font-size: 13px;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+  outline: 2px solid #93c5fd;
+  border-color: #2563eb;
+}
+
+.ghosting-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ghosting-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: #dc2626;
+}
+
+/* SUMMARY */
+
+.war-room-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 22px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.ghosting-summary {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* APPLICATION GRID */
+
+.application-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.application-card {
+  padding: 22px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.application-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.application-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.application-company {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.application-card h2 {
+  margin: 6px 0;
+  font-size: 19px;
+}
+
+.status-badge {
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-draft {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-applied {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-screening {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-interview {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.status-offer {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-ghosted {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.ghosting-badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 10px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* APPLICATION INFORMATION */
+
+.application-info {
+  margin: 18px 0;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.application-info p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.application-info span {
+  color: #64748b;
+}
+
+.application-info strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* CHECKLIST PROGRESS */
+
+.application-progress {
+  margin: 18px 0;
+}
+
+.progress-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+
+.progress-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 20px;
+  transition: width 0.3s;
+}
+
+/* SKILL MATCH */
+
+.application-match {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.application-match strong {
+  color: #2563eb;
+  font-size: 18px;
+}
+
+/* BUTTONS */
+
+.application-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.application-actions button {
+  flex: 1;
+  padding: 11px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.detail-button {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.detail-button:hover {
+  background: #cbd5e1;
+}
+
+.simulate-button {
+  background: #2563eb;
+  color: white;
+}
+
+.simulate-button:hover {
+  background: #1d4ed8;
+}
+
+/* EMPTY STATE */
+
+.war-room-empty {
+  padding: 55px 20px;
+  text-align: center;
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+}
+
+.war-room-empty p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+  .war-room-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .application-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .war-room {
+    width: calc(100% - 24px);
+    margin: 24px auto;
+  }
+
+  .war-room-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .war-room-header h1 {
+    font-size: 25px;
+  }
+
+  .war-room-total {
+    width: 100%;
+  }
+
+  .war-room-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .war-room-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .application-card {
+    padding: 16px;
+  }
+
+  .application-card-top {
+    flex-direction: column;
+  }
+
+  .application-actions {
+    flex-direction: column;
+  }
+}

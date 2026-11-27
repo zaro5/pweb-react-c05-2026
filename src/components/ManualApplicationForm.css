@@ -1,0 +1,186 @@
+
+/* =====================================
+   MANUAL APPLICATION FORM
+===================================== */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] {
+  width: min(850px, calc(100% - 40px));
+  margin: 45px auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.055);
+  color: #172033;
+}
+
+/* HEADER */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > h2 {
+  margin: 0 0 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #172033;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > h2::before {
+  content: "APPLICATION MANAGEMENT";
+  display: block;
+  margin-bottom: 8px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+/* FORM GRID */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 21px 20px;
+  align-items: start;
+}
+
+/* FIELD WRAPPER */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* LABEL */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] label {
+  display: block;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* INPUT, SELECT, TEXTAREA */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] input,
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] select,
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 13px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  color: #172033;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] input::placeholder,
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] input:focus,
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] select:focus,
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] select {
+  cursor: pointer;
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* NOTES FIELD */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > div:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+/* FIELD ERROR */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] form span {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* FORM ERROR */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] [role="alert"] {
+  padding: 12px 15px;
+  margin-bottom: 18px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* SUBMIT BUTTON */
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-width: 210px;
+  min-height: 45px;
+  padding: 12px 20px;
+  margin-top: 3px;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 9px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > button[type="submit"]:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > button[type="submit"]:active {
+  transform: scale(0.98);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+  section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] {
+    width: calc(100% - 24px);
+    margin: 25px auto;
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > h2 {
+    font-size: 21px;
+  }
+
+  section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > div:has(textarea) {
+    grid-column: auto;
+  }
+
+  section[aria-label="Fitur 2 - Form Tambah Lamaran Manual"] > form > button[type="submit"] {
+    width: 100%;
+    justify-self: stretch;
+  }
+}

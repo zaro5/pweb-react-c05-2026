@@ -1,3 +1,4 @@
+import "./ManualApplicationForm.css";
 import { useState, useRef, useCallback } from "react";
 import type { Application, ApplicationStatus, WorkMode } from "../types/magang";
 
