@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type {
   Application,
@@ -7,12 +6,14 @@ import type {
 } from "../types/magang";
 
 import { getAvailableTransitions } from "../utils/stateMachine";
+import { InterviewPrepTimer } from "./InterviewPrepTimer"; // [ORANG 3]
 import "./ApplicationDetail.css";
 
 interface ApplicationDetailProps {
   application: Application;
   onUpdate: (updatedApplication: Application) => void;
   onClose: () => void;
+  onDelete: (id: string) => void; // [ORANG 3]
 }
 
 type FormErrors = {
@@ -37,6 +38,7 @@ export function ApplicationDetail({
   application,
   onUpdate,
   onClose,
+  onDelete, // [ORANG 3]
 }: ApplicationDetailProps) {
   const [targetStatus, setTargetStatus] =
     useState<ApplicationStatus | "">("");
@@ -65,6 +67,9 @@ export function ApplicationDetail({
 
   const [newChecklist, setNewChecklist] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
+
+  // [ORANG 3] Panel Latihan Interview (buka/tutup -> mount/unmount timer)
+  const [showPrep, setShowPrep] = useState(false);
 
   const checklist = application.checklist ?? [];
   const activityLog = application.activityLog ?? [];
@@ -277,7 +282,8 @@ export function ApplicationDetail({
   }
 
   return (
-    <main className="application-detail">
+    // [ORANG 3] <main> -> <div>, karena App.tsx sudah punya <main>
+    <div className="application-detail">
       <header className="detail-header">
         <div>
           <span className="detail-eyebrow">
@@ -289,13 +295,24 @@ export function ApplicationDetail({
           <p>{application.role}</p>
         </div>
 
-        <button
-          type="button"
-          className="close-detail-button"
-          onClick={onClose}
-        >
-          Kembali
-        </button>
+        <div className="detail-header-actions">
+          <button
+            type="button"
+            className="close-detail-button"
+            onClick={onClose}
+          >
+            Kembali
+          </button>
+
+          {/* [ORANG 3] Hapus -> toast Undo 5 detik di App.tsx */}
+          <button
+            type="button"
+            className="delete-button"
+            onClick={() => onDelete(application.id)}
+          >
+            Hapus
+          </button>
+        </div>
       </header>
 
       <div className="detail-layout">
@@ -680,6 +697,24 @@ export function ApplicationDetail({
             </div>
           </article>
 
+          {/* [ORANG 3] Latihan Interview: timer hanya dirender saat panel
+              dibuka, jadi saat ditutup komponen unmount dan clearInterval jalan. */}
+          <article className="detail-panel">
+            <button
+              type="button"
+              className="confirm-transition"
+              onClick={() =>
+                setShowPrep((previous) => !previous)
+              }
+            >
+              {showPrep
+                ? "Tutup Latihan Interview"
+                : "Latihan Interview"}
+            </button>
+
+            {showPrep && <InterviewPrepTimer />}
+          </article>
+
           <article className="detail-panel">
             <h2>Riwayat Aktivitas</h2>
 
@@ -714,6 +749,6 @@ export function ApplicationDetail({
           </article>
         </aside>
       </div>
-    </main>
+    </div>
   );
 }

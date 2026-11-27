@@ -58,4 +58,5 @@ export interface Application {
   checklist?: ChecklistItem[];
   activityLog?: ActivityLogItem[];
   notes?: string;
+  requiredSkills?: string[];
 }

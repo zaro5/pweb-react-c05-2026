@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import type {
   Application,
@@ -20,6 +19,7 @@ interface WarRoomProps {
   applications: Application[];
   onSimulateGhosting: (id: string) => void;
   onOpenDetail: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const statuses: ApplicationStatus[] = [
@@ -73,6 +73,7 @@ export function WarRoom({
   applications,
   onSimulateGhosting,
   onOpenDetail,
+  onDelete, // [ORANG 3] sebelumnya belum diambil dari props
 }: WarRoomProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] =
@@ -158,7 +159,7 @@ export function WarRoom({
   ]);
 
   return (
-    <main className="war-room">
+    <div className="war-room">
       <header className="war-room-header">
         <div>
           <p className="war-room-eyebrow">
@@ -440,12 +441,21 @@ export function WarRoom({
                       Simulasi +15 Hari
                     </button>
                   )}
+
+                  {/* [ORANG 3] Tombol Hapus -> toast Undo 5 detik */}
+                  <button
+                    type="button"
+                    className="delete-button"
+                    onClick={() => onDelete(app.id)}
+                  >
+                    Hapus
+                  </button>
                 </div>
               </article>
             );
           })}
         </section>
       )}
-    </main>
+    </div>
   );
 }

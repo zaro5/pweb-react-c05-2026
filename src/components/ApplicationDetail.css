@@ -432,3 +432,8 @@
     min-height: 40px;
   }
 }
+.detail-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}

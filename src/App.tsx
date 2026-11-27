@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   Application,
@@ -16,38 +15,101 @@ import { ManualApplicationForm } from "./components/ManualApplicationForm";
 import { WarRoom } from "./components/WarRoom";
 import { ApplicationDetail } from "./components/ApplicationDetail";
 
+// [ORANG 3]
+import { useLocalStorage } from "./hooks/useLocalStorage";
+import { StatsCards } from "./components/StatsCards";
+import { OfferComparator } from "./components/OfferComparator";
+
 import "./App.css";
 
-type ActiveView = "explore" | "pipeline" | "add" | "detail";
+type ActiveView = "explore" | "pipeline" | "add" | "detail" | "compare";
+
+const UNDO_DELAY_MS = 5000;
 
 function App() {
-  // State utama aplikasi.
-  const [applications, setApplications] = useState<Application[]>([]);
+  // [ORANG 3] Persistensi via useLocalStorage<T>
+  const [applications, setApplications] = useLocalStorage<Application[]>(
+    "applications",
+    [],
+  );
 
-  const [kaptenSkills, setKaptenSkills] = useState<string[]>(
+  const [kaptenSkills, setKaptenSkills] = useLocalStorage<string[]>(
+    "kaptenSkills",
     DEFAULT_KAPTEN_SKILLS,
   );
 
-  // Navigasi halaman.
-  const [activeView, setActiveView] =
-    useState<ActiveView>("explore");
+  const [activeView, setActiveView] = useState<ActiveView>("explore");
 
-  // Menyimpan ID lamaran yang sedang dibuka.
-  const [selectedApplicationId, setSelectedApplicationId] =
-    useState<string | null>(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<
+    string | null
+  >(null);
 
-  // Mencari detail lamaran berdasarkan ID.
+  // [ORANG 3] Undo Delete
+  const [pendingDelete, setPendingDelete] = useState<Application | null>(null);
+  const undoTimerRef = useRef<number | null>(null);
+
   const selectedApplication = applications.find(
-    (application) =>
-      application.id === selectedApplicationId,
+    (application) => application.id === selectedApplicationId,
   );
+
+  // Derived: jumlah offer untuk label menu.
+  const offerCount = applications.filter(
+    (application) => application.status === "OFFER",
+  ).length;
+
+  function clearUndoTimer() {
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+  }
+
+  // [ORANG 3] Bersihkan timer saat App unmount.
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current !== null) {
+        window.clearTimeout(undoTimerRef.current);
+      }
+    };
+  }, []);
+
+  // [ORANG 3] Hapus lamaran + toast Undo 5 detik.
+  function handleDeleteApplication(id: string) {
+    const target = applications.find((application) => application.id === id);
+    if (!target) return;
+
+    // Hapus berturut-turut: timer lama dibersihkan dulu.
+    clearUndoTimer();
+
+    setApplications((previous) =>
+      previous.filter((application) => application.id !== id),
+    );
+    setPendingDelete(target);
+
+    // Kalau dihapus dari halaman detail, kembali ke pipeline.
+    if (selectedApplicationId === id) {
+      setSelectedApplicationId(null);
+      setActiveView("pipeline");
+    }
+
+    undoTimerRef.current = window.setTimeout(() => {
+      setPendingDelete(null);
+      undoTimerRef.current = null;
+    }, UNDO_DELAY_MS);
+  }
+
+  // [ORANG 3] Undo: lamaran kembali utuh (checklist + activity log ikut).
+  function handleUndoDelete() {
+    if (!pendingDelete) return;
+
+    clearUndoTimer();
+    setApplications((previous) => [...previous, pendingDelete]);
+    setPendingDelete(null);
+  }
 
   // Menambahkan lamaran dari Form Manual.
   function handleAddApplication(
-    newApplication: Omit<
-      Application,
-      "id" | "lastUpdatedAt"
-    >,
+    newApplication: Omit<Application, "id" | "lastUpdatedAt">,
   ) {
     const now = new Date().toISOString();
 
@@ -57,28 +119,22 @@ function App() {
       lastUpdatedAt: now,
     };
 
-    setApplications((previous) => [
-      ...previous,
-      application,
-    ]);
-
+    setApplications((previous) => [...previous, application]);
     setActiveView("pipeline");
   }
 
   // Menyimpan lowongan dari Job Explorer ke Wishlist.
-  function handleSaveJobAsApplication(
-    job: JobListing,
-    match: MatchResult,
-  ) {
+  function handleSaveJobAsApplication(job: JobListing, match: MatchResult) {
     const now = new Date().toISOString();
 
     const application: Application = {
       id: crypto.randomUUID(),
       company: job.company_name,
       role: job.title,
-      status: "DRAFT",
+      status: "DRAFT", // di UI Orang 2 label "DRAFT" ditampilkan sebagai "Wishlist"
       lastUpdatedAt: now,
       matchScore: match.score,
+      requiredSkills: job.tags, // [ORANG 3] dipakai Offer Comparator
       checklist: [],
       activityLog: [
         {
@@ -89,18 +145,12 @@ function App() {
       ],
     };
 
-    setApplications((previous) => [
-      ...previous,
-      application,
-    ]);
-
+    setApplications((previous) => [...previous, application]);
     setActiveView("pipeline");
   }
 
   // Memperbarui data aplikasi dari Detail Lamaran.
-  function handleUpdateApplication(
-    updatedApplication: Application,
-  ) {
+  function handleUpdateApplication(updatedApplication: Application) {
     setApplications((previous) =>
       previous.map((application) =>
         application.id === updatedApplication.id
@@ -126,9 +176,7 @@ function App() {
 
     setApplications((previous) =>
       previous.map((application) => {
-        if (application.id !== id) {
-          return application;
-        }
+        if (application.id !== id) return application;
 
         return {
           ...application,
@@ -167,9 +215,7 @@ function App() {
 
         <nav className="app-navigation">
           <button
-            className={
-              activeView === "explore" ? "nav-active" : ""
-            }
+            className={activeView === "explore" ? "nav-active" : ""}
             onClick={() => setActiveView("explore")}
           >
             Eksplorasi Lowongan
@@ -177,8 +223,7 @@ function App() {
 
           <button
             className={
-              activeView === "pipeline" ||
-              activeView === "detail"
+              activeView === "pipeline" || activeView === "detail"
                 ? "nav-active"
                 : ""
             }
@@ -187,10 +232,16 @@ function App() {
             Pipeline Lamaran ({applications.length})
           </button>
 
+          {/* [ORANG 3] */}
           <button
-            className={
-              activeView === "add" ? "nav-active" : ""
-            }
+            className={activeView === "compare" ? "nav-active" : ""}
+            onClick={() => setActiveView("compare")}
+          >
+            Bandingkan Offer ({offerCount})
+          </button>
+
+          <button
+            className={activeView === "add" ? "nav-active" : ""}
             onClick={() => setActiveView("add")}
           >
             + Tambah Lamaran
@@ -200,6 +251,11 @@ function App() {
 
       {/* MAIN CONTENT */}
       <main className="app-main">
+        {/* [ORANG 3] 5 kartu statistik (derived state) */}
+        {(activeView === "explore" || activeView === "pipeline") && (
+          <StatsCards applications={applications} />
+        )}
+
         {activeView === "explore" && (
           <JobExplorer
             kaptenSkills={kaptenSkills}
@@ -221,6 +277,7 @@ function App() {
             applications={applications}
             onSimulateGhosting={handleSimulateGhosting}
             onOpenDetail={handleOpenDetail}
+            onDelete={handleDeleteApplication}
           />
         )}
 
@@ -229,18 +286,35 @@ function App() {
             application={selectedApplication}
             onUpdate={handleUpdateApplication}
             onClose={handleBackToPipeline}
+            onDelete={handleDeleteApplication}
           />
         )}
 
         {activeView === "detail" && !selectedApplication && (
           <div className="app-empty">
             <h2>Lamaran tidak ditemukan</h2>
-            <button onClick={handleBackToPipeline}>
-              Kembali ke Pipeline
-            </button>
+            <button onClick={handleBackToPipeline}>Kembali ke Pipeline</button>
           </div>
         )}
+
+        {/* [ORANG 3] Offer Comparator */}
+        {activeView === "compare" && (
+          <OfferComparator
+            applications={applications}
+            kaptenSkills={kaptenSkills}
+          />
+        )}
       </main>
+
+      {/* [ORANG 3] Toast Undo */}
+      {pendingDelete && (
+        <div className="undo-toast" role="status">
+          <span>
+            Lamaran <strong>{pendingDelete.company}</strong> telah dihapus.
+          </span>
+          <button onClick={handleUndoDelete}>Undo</button>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer className="app-footer">
